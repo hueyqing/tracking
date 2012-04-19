@@ -366,26 +366,30 @@ class JointParticleFilter:
     Each particle is a tuple of ghost positions.
     Use self.numParticles for the number of particles"
     """
+
+    print "initializeParticles"
     if (self.particles == None):
       initParticles = []
       initWeights = []
       for x in range(self.numParticles):
-        ghostTuple = []
-        for y in range(self.numGhosts):
-          ghostTuple.append(random.choice(self.legalPositions))
-        initParticles.append(tuple(ghostTuple))
+        ghostPositions = []
+        for ghost in range(self.numGhosts):
+          ghostPositions.append(random.choice(self.legalPositions))
+        initParticles.append(tuple(ghostPositions))
         initWeights.append(1)
       self.particles = initParticles
       self.weights = initWeights
     else:
+      print "resample"
       resampleParticles = []
       resampleWeights = []
       for x in range(self.numParticles):
-        newGhostTuple = []
-        for y in range(self.numGhosts):
-          newGhostTuple.append(util.sample(self.getBeliefDistribution()))
-        resampleParticles.append(tuple(newGhostTuple))
+        ghostPositions = []
+        for ghost in range(self.numGhosts):
+          ghostPositions.append(util.sample(self.getBeliefDistribution()))
+        resampleParticles.append(tuple(ghostPositions))
         resampleWeights.append(1)
+
       self.particles = resampleParticles
       self.weights = resampleWeights
 
@@ -430,14 +434,12 @@ class JointParticleFilter:
     """
     newParticles = []
     for oldParticle in self.particles:
-      newParticle = list(oldParticle) # A list of ghost positions
+      newParticle = []
 
-      for i in range(self.numGhosts):
-        newPosDist = getPositionDistributionForGhost(setGhostPositions(gameState, list(oldParticle)), i, self.ghostAgents[i])
+      for ghost in range(self.numGhosts):
+        newPosDist = getPositionDistributionForGhost(setGhostPositions(gameState, oldParticle), ghost, self.ghostAgents[ghost])
         newPos = util.sample(newPosDist)
-        newParticle[i] = newPos
-              
-      "*** YOUR CODE HERE ***"
+        newParticle.append(newPos)
       newParticles.append(tuple(newParticle))
 
     self.particles = newParticles
@@ -448,11 +450,6 @@ class JointParticleFilter:
   def observeState(self, gameState):
     """
     Resamples the set of particles using the likelihood of the noisy observations.
-
-    As in elapseTime, to loop over the ghosts, use:
-
-      for i in range(self.numGhosts):
-        ...
 
     A correct implementation will handle two special cases:
       1) When a ghost is captured by Pacman, all particles should be updated so
@@ -491,9 +488,9 @@ class JointParticleFilter:
         trueDistance = util.manhattanDistance(ghostPos, pacmanPosition)
         jailPosition = self.getJailPosition(ghost)
         
-        
         if (noisyDistances[ghost] == None):
           newParticle.append(jailPosition)
+          newWeights.append(1)
         else:
           emissionProb = emissionModel[trueDistance]
           newWeight = newWeight * emissionProb
@@ -504,22 +501,12 @@ class JointParticleFilter:
 
       newParticles.append(tuple(newParticle))
       newWeights.append(newWeight)
-      if (weight > 0):
-        noParticleHasWeight = False
+
     if (noParticleHasWeight):
       self.initializeParticles()
-      for particle in self.particles:
-        newParticle = []
-        for i in range(0, self.numGhosts):
-          if(noisyDistances[i] == None):
-            newParticle.append(self.getJailPosition(i))
-          else:
-            newParticle.append(particle[i])
-        newParticles.append(tuple(newParticle))
     else:
       self.particles = newParticles
       self.weights = newWeights
-
   
   def getBeliefDistribution(self):
     dist = util.Counter()
