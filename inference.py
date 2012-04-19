@@ -205,6 +205,7 @@ class ExactInference(InferenceModule):
     return self.beliefs
 
 class ParticleFilter(InferenceModule):
+
   """
   A particle filter for approximately tracking a single ghost.
   
@@ -216,6 +217,8 @@ class ParticleFilter(InferenceModule):
   def __init__(self, ghostAgent, numParticles=300):
      InferenceModule.__init__(self, ghostAgent);
      self.setNumParticles(numParticles)
+     self.particles = None
+
   
   def setNumParticles(self, numParticles):
     self.numParticles = numParticles
@@ -223,10 +226,17 @@ class ParticleFilter(InferenceModule):
   
   def initializeUniformly(self, gameState):
     "Initializes a list of particles. Use self.numParticles for the number of particles"
-    self.beliefs = []
-    for x in range(0, self.numParticles):
-      self.beliefs.append((random.choice(self.legalPositions), 1))
-  
+    if (self.particles == None):
+      initParticles = []
+      for x in range(self.numParticles):
+        initParticles.append((random.choice(self.legalPositions), 1))
+      self.particles = initParticles
+    else:
+      resampleParticles = []
+      for x in range(self.numParticles):
+        resampleParticles.append((util.sample(self.getBeliefDistribution()), 1))
+        self.particles = resampleParticles
+        
   def observe(self, observation, gameState):
     """
     Update beliefs based on the given distance observation. Make
@@ -253,27 +263,29 @@ class ParticleFilter(InferenceModule):
     pacmanPosition = gameState.getPacmanPosition()
 
     noParticleHasWeight = True
-    newBeliefs = []
+    updateParticles = []
 
     if (noisyDistance == None):
-      #for i in range(self.numParticles):
-      newBeliefs.append((self.getJailPosition(),1))
-    else:
-      #loop through particles
-      for position, probability in self.beliefs:
-        if (probability > 0.001):
-          noParticleHasWeight = False
-          
-        trueDistance = util.manhattanDistance(position, pacmanPosition)
-        emissionProb = emissionModel[trueDistance]
-        weight = emissionProb * probability
-        newBeliefs.append((position, weight))
+      #handle jail
+      for x in range(self.numParticles):
+        updateParticles.append((self.getJailPosition(), 1))
+      self.particles = updateParticles
+      return
+
+    #loop through particles
+    for position, probability in self.particles:
+      trueDistance = util.manhattanDistance(pacmanPosition, position)
+      emissionProb = emissionModel[trueDistance]
+      weight = emissionProb * probability
+      if (weight > 0):
+        noParticleHasWeight = False
+      updateParticles.append((position, weight))
 
     if (noParticleHasWeight):
       self.initializeUniformly(gameState)
     else:
-      self.beliefs = newBeliefs
-          
+      self.particles = updateParticles
+
   def elapseTime(self, gameState):
     """
     Update beliefs for a time step elapsing.
@@ -286,37 +298,26 @@ class ParticleFilter(InferenceModule):
     its previous position (oldPos) as well as Pacman's current
     position.
     """
-    "*** YOUR CODE HERE ***"
-    newBeliefs = [];
-    
-    for particle in self.beliefs:
-      newPosDist = self.getPositionDistribution(self.setGhostPosition(gameState, particle[0]))
-      newParticle = (util.sample(newPosDist), particle[1])
-      newBeliefs.append(newParticle)
-    
-    self.beliefs = newBeliefs
+    updateParticles = [];
+    for position, probability in self.particles:
+      newPosDist = self.getPositionDistribution(self.setGhostPosition(gameState, position))
+      newParticle = (util.sample(newPosDist), probability)
+      updateParticles.append(newParticle)
+    self.particles = updateParticles
 
   def getBeliefDistribution(self):
     """
     Return the agent's current belief state, a distribution over
     ghost locations conditioned on all evidence and time passage.
     """
-    returnVal = util.Counter()
+    beliefs = util.Counter()
+    for position, probability in self.particles:
+      beliefs[position] += probability
 
-    for position in self.legalPositions:
-      returnVal[position] = 0
+    beliefs.normalize()
 
-    probabilitySum = 0
-    for position, probability in self.beliefs:
-      returnVal[position] += probability
-      probabilitySum = probabilitySum + probability
-
-    for position, probability in self.beliefs:
-      returnVal[position] = returnVal[position] / float(probabilitySum)
-
-    print returnVal
-
-    return returnVal
+    self.beliefs = beliefs
+    return beliefs
 
 class MarginalInference(InferenceModule):
   "A wrapper around the JointInference module that returns marginal beliefs about ghosts."
