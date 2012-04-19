@@ -378,13 +378,11 @@ class JointParticleFilter:
       self.particles = initParticles
       self.weights = initWeights
     else:
+      print "resampling"
       resampleParticles = []
       resampleWeights = []
       for x in range(0, self.numParticles):
-        newGhostTuple = []
-        for y in range(0, self.numGhosts):
-          newGhostTuple.append(util.sample(self.getBeliefDistribution()))
-        resampleParticles.append(tuple(newGhostTuple))
+        resampleParticles.append(util.sample(self.getBeliefDistribution()))
         resampleWeights.append(1)
       self.particles = resampleParticles
       self.weights = resampleWeights
@@ -499,18 +497,10 @@ class JointParticleFilter:
           newParticle.append(particle[i])
       newParticles.append(tuple(newParticle))
       newWeights.append(newWeight)
-      if (weight > 0):
+      if (newWeight > 0):
         noParticleHasWeight = False
     if (noParticleHasWeight):
       self.initializeParticles()
-      for particle in self.particles:
-        newParticle = []
-        for i in range(0, self.numGhosts):
-          if(noisyDistances[i] == None):
-            newParticle.append(self.getJailPosition(i))
-          else:
-            newParticle.append(particle[i])
-        newParticles.append(tuple(newParticle))
     else:
       self.particles = newParticles
       self.particlesWeight = newWeights
