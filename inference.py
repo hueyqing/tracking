@@ -144,7 +144,7 @@ class ExactInference(InferenceModule):
         if (emissionProb > 0):
           allPossiblePositions[position] = emissionProb * self.beliefs[position]
 
-    #allPossiblePositions.normalize()
+    allPossiblePositions.normalize()
     self.beliefs = allPossiblePositions
     
   def elapseTime(self, gameState):
@@ -191,21 +191,11 @@ class ExactInference(InferenceModule):
     """
     
     newBeliefs = util.Counter();
-    if (self.transitionMap == None):
-      transitionMap = dict();
-      for initialPosition in self.legalPositions:
-        finalPositionDist = self.getPositionDistribution(self.setGhostPosition(gameState, initialPosition))
-        for finalPosition, prob in finalPositionDist.items():
-          transitionMap[(initialPosition, finalPosition)] = finalPositionDist[initialPosition]
-
-    for newPos in self.legalPositions:
-      sum = 0
-      for oldPos in self.legalPositions:
-        transProb = transitionMap[(initialPosition, finalPosition)]
-        oldBelief = self.beliefs[oldPos]
-        sum = sum + transProb * oldBelief
-      
-      newBeliefs[newPos] = sum
+    
+    for oldPos in self.legalPositions:
+      newPosDist = self.getPositionDistribution(self.setGhostPosition(gameState, oldPos))
+      for newPos, transProb in newPosDist.items():
+        newBeliefs[newPos] = newBeliefs[newPos] + transProb * self.beliefs[oldPos]
     
     newBeliefs.normalize()
     self.beliefs = newBeliefs
