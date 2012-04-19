@@ -212,7 +212,6 @@ class ParticleFilter(InferenceModule):
   an element from a list uniformly at random, and util.sample, which
   samples a key from a Counter by treating its values as probabilities.
   """
-
   
   def __init__(self, ghostAgent, numParticles=300):
      InferenceModule.__init__(self, ghostAgent);
@@ -224,7 +223,6 @@ class ParticleFilter(InferenceModule):
   
   def initializeUniformly(self, gameState):
     "Initializes a list of particles. Use self.numParticles for the number of particles"
-    "*** YOUR CODE HERE ***"
     self.beliefs = []
     assignedParticles = self.numParticles
     while (assignedParticles > 0):
@@ -255,29 +253,28 @@ class ParticleFilter(InferenceModule):
     noisyDistance = observation
     emissionModel = busters.getObservationDistribution(noisyDistance)
     pacmanPosition = gameState.getPacmanPosition()
-    "*** YOUR CODE HERE ***"
 
     noParticleHasWeight = True
-    for particle in self.beliefs:
-      if (particle[1] > 0.001):
-        noParticleHasWeight = False
-    
-    if (noParticleHasWeight):
-      self.initializeUniformly(gameState)
-
     newBeliefs = []
 
     if (noisyDistance == None):
       newBeliefs.append((self.getJailPosition(),1))
     else:
-      for particle in self.beliefs:
-        position = particle[0]
+      #loop through particles
+      for position, probability in self.beliefs:
+        if (probability > 0.001):
+          noParticleHasWeight = False
+          
         trueDistance = util.manhattanDistance(position, pacmanPosition)
         emissionProb = emissionModel[trueDistance]
         if (emissionProb > 0):
-          weight = emissionProb * particle[1]
+          weight = emissionProb * probability
           newBeliefs.append((position, weight))
-    self.beliefs = newBeliefs
+
+    if (noParticleHasWeight):
+      self.initializeUniformly(gameState)
+    else:
+      self.beliefs = newBeliefs
           
   def elapseTime(self, gameState):
     """
