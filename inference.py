@@ -362,11 +362,13 @@ class JointParticleFilter:
     "Initializes particles randomly.  Each particle is a tuple of ghost positions. Use self.numParticles for the number of particles"
     "*** YOUR CODE HERE ***"
     self.particles = []
+    self.particlesWeight = []
     for x in range(0, self.numParticles):
       ghostTuple = []
       for y in range(0, self.numGhosts):
         ghostTuple.append(random.choice(self.legalPositions))
       self.particles.append(tuple(ghostTuple))
+      self.particlesWeight.append(1)
 
   def addGhostAgent(self, agent):
     "Each ghost agent is registered separately and stored (in case they are different)."
@@ -458,17 +460,32 @@ class JointParticleFilter:
       return
     emissionModels = [busters.getObservationDistribution(dist) for dist in noisyDistances]
 
-    """
-    for ghost in range(self.numGhosts):
-      noisyDistance = noisyDistances[ghost]
-      emissionModel = emissionModels[ghost]
+    noParticleHasWeight = True
 
-      if (noisyDistance = None):
-        for i in range(self.numParticles):
-          
-      else:
+    newParticles = []
+    newWeights = []
 
-    """
+    for particle, weight in zip(self.particles, self.particlesWeight):
+      newParticle = []
+      newWeight = weight
+      if (weight > 0.001):
+        noParticleHasWeight = False
+      for i in range(0, self.numGhosts):
+        if (noisyDistances[i] == None):
+          newParticle[i] = self.getJailPosition
+        else:
+          trueDistance = util.manhattanDistance(particle[i], pacmanPosition)
+          emissionModel = emissionModels[i]
+          emissionProb = emissionModel[trueDistance]
+          newWeight = newWeight * emissionProb
+          newParticle[i] = particle[i]
+      newParticles.append(tuple(newParticle))
+      newWeights.append(newWeight)
+    if (noParticleHasWeight):
+      self.initializeUniformly(gameState)
+    else:
+      self.particles = newParticles
+      self.particlesWeight = newWeights
 
 
     "*** YOUR CODE HERE ***"
