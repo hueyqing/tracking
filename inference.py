@@ -385,7 +385,7 @@ class JointParticleFilter:
         resampleParticles.append(tuple(newGhostTuple))
         resampleWeights.append(1)
       self.particles = resampleParticles
-      self.weights = rsampleWeights
+      self.weights = resampleWeights
 
   def addGhostAgent(self, agent):
     "Each ghost agent is registered separately and stored (in case they are different)."
@@ -436,7 +436,7 @@ class JointParticleFilter:
       newParticle = list(oldParticle) # A list of ghost positions
 
       for i in range(self.numGhosts):
-        newPosDist = getPositionDistributionForGhost(setGhostPositions(gameState, newParticle), i, self.ghostAgents[i])
+        newPosDist = getPositionDistributionForGhost(setGhostPositions(gameState, list(oldParticle)), i, self.ghostAgents[i])
         newPos = util.sample(newPosDist)
         newParticle[i] = newPos
               
@@ -485,8 +485,6 @@ class JointParticleFilter:
     for particle, weight in zip(self.particles, self.weights):
       newParticle = []
       newWeight = weight
-      if (weight > 0):
-        noParticleHasWeight = False
       for i in range(0, self.numGhosts):
         if (noisyDistances[i] == None):
           newParticle.append(self.getJailPosition(i))
@@ -498,8 +496,18 @@ class JointParticleFilter:
           newParticle.append(particle[i])
       newParticles.append(tuple(newParticle))
       newWeights.append(newWeight)
+      if (weight > 0):
+        noParticleHasWeight = False
     if (noParticleHasWeight):
       self.initializeParticles()
+      for particle in self.particles:
+        newParticle = []
+        for i in range(0, self.numGhosts):
+          if(noisyDistances[i] == None):
+            newParticle.append(self.getJailPosition(i))
+          else:
+            newParticle.append(particle[i])
+        newParticles.append(tuple(newParticle))
     else:
       self.particles = newParticles
       self.particlesWeight = newWeights
