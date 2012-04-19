@@ -380,14 +380,14 @@ class JointParticleFilter:
     else:
       resampleParticles = []
       resampleWeights = []
-      for x in range(0, self.numParticles):
+      for x in range(self.numParticles):
         newGhostTuple = []
-        for y in range(0, self.numGhosts):
+        for y in range(self.numGhosts):
           newGhostTuple.append(util.sample(self.getBeliefDistribution()))
         resampleParticles.append(tuple(newGhostTuple))
         resampleWeights.append(1)
       self.particles = resampleParticles
-      self.weights = rsampleWeights
+      self.weights = resampleWeights
 
   def addGhostAgent(self, agent):
     "Each ghost agent is registered separately and stored (in case they are different)."
@@ -396,11 +396,6 @@ class JointParticleFilter:
   def elapseTime(self, gameState):
     """
     Samples each particle's next state based on its current state and the gameState.
-
-    To loop over the ghosts, use:
-
-      for i in range(self.numGhosts):
-        ...
 
     Then, assuming that "i" refers to the index of the
     ghost, to obtain the distributions over new positions for that
@@ -478,34 +473,42 @@ class JointParticleFilter:
     if (len(noisyDistances) < self.numGhosts):
       print "SOMETHING_WENT_WRONG"
       return
-    emissionModels = [busters.getObservationDistribution(dist) for dist in noisyDistances]
 
-    noParticleHasWeight = True
+    emissionModels = [busters.getObservationDistribution(dist) for dist in noisyDistances]
 
     newParticles = []
     newWeights = []
+    noParticleHasWeight = True
 
     for particle, weight in zip(self.particles, self.weights):
       newParticle = []
       newWeight = weight
-      if (weight > 0):
-        noParticleHasWeight = False
-      for i in range(0, self.numGhosts):
-        if (noisyDistances[i] == None):
-          newParticle.append(self.getJailPosition(i))
+
+      for ghost in range(self.numGhosts):
+        noisyDistance = noisyDistances[ghost]
+        emissionModel = emissionModels[ghost]
+        ghostPos = particle[ghost]
+        trueDistance = util.manhattanDistance(ghostPos, pacmanPosition)
+        jailPosition = self.getJailPosition(ghost)
+        
+        
+        if (noisyDistances[ghost] == None):
+          newParticle.append(jailPosition)
         else:
-          trueDistance = util.manhattanDistance(particle[i], pacmanPosition)
-          emissionModel = emissionModels[i]
           emissionProb = emissionModel[trueDistance]
           newWeight = newWeight * emissionProb
-          newParticle.append(particle[i])
+          newParticle.append(ghostPos)
+
+      if (newWeight > 0):
+        noParticleHasWeight = False
+
       newParticles.append(tuple(newParticle))
       newWeights.append(newWeight)
     if (noParticleHasWeight):
       self.initializeParticles()
     else:
       self.particles = newParticles
-      self.particlesWeight = newWeights
+      self.weights = newWeights
 
   
   def getBeliefDistribution(self):
