@@ -214,7 +214,7 @@ class ParticleFilter(InferenceModule):
   samples a key from a Counter by treating its values as probabilities.
   """
   
-  def __init__(self, ghostAgent, numParticles=300):
+  def __init__(self, ghostAgent, numParticles=600):
      InferenceModule.__init__(self, ghostAgent);
      self.setNumParticles(numParticles)
      self.particles = None
@@ -476,14 +476,17 @@ class JointParticleFilter:
         trueDistance = util.manhattanDistance(ghostPos, pacmanPosition)
         jailPosition = self.getJailPosition(ghost)
 
+
+
         if (noisyDistances[ghost] == None):
           newParticle.append(jailPosition)
         else:
           newParticle.append(ghostPos)
+          emissionProb = emissionModel[trueDistance]
+          newWeight = newWeight * emissionProb
 
-        emissionProb = emissionModel[trueDistance]
-        newWeight = newWeight * emissionProb
-      if (newWeight > 0):
+
+      if (newWeight > .000001):
         noParticleHasWeight = False
 
       newParticles.append(tuple(newParticle))
@@ -518,7 +521,6 @@ class JointParticleFilter:
 
     for particle in range(self.numParticles):
       sample = util.sample(dist)
-      print sample
       resampleParticles.append(sample)
       resampleWeights.append(1)
 
