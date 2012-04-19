@@ -366,30 +366,18 @@ class JointParticleFilter:
     Each particle is a tuple of ghost positions.
     Use self.numParticles for the number of particles"
     """
-
     print "initializeParticles"
-    if (self.particles == None):
-      initParticles = []
-      initWeights = []
-      for x in range(self.numParticles):
-        ghostPositions = []
-        for ghost in range(self.numGhosts):
-          ghostPositions.append(random.choice(self.legalPositions))
-        initParticles.append(tuple(ghostPositions))
-        initWeights.append(1)
-      self.particles = initParticles
-      self.weights = initWeights
-    else:
-      print "resampling"
-      resampleParticles = []
-      resampleWeights = []
-      for x in range(0, self.numParticles):
-        resampleParticles.append(util.sample(self.getBeliefDistribution()))
-        resampleWeights.append(1)
-
-      self.particles = resampleParticles
-      self.weights = resampleWeights
-
+    initParticles = []
+    initWeights = []
+    for x in range(self.numParticles):
+      ghostPositions = []
+      for ghost in range(self.numGhosts):
+        ghostPositions.append(random.choice(self.legalPositions))
+      initParticles.append(tuple(ghostPositions))
+      initWeights.append(1)
+    self.particles = initParticles
+    self.weights = initWeights
+        
   def addGhostAgent(self, agent):
     "Each ghost agent is registered separately and stored (in case they are different)."
     self.ghostAgents.append(agent)
@@ -484,14 +472,13 @@ class JointParticleFilter:
         ghostPos = particle[ghost]
         trueDistance = util.manhattanDistance(ghostPos, pacmanPosition)
         jailPosition = self.getJailPosition(ghost)
-        
+
         if (noisyDistances[ghost] == None):
           newParticle.append(jailPosition)
-          newWeights.append(1)
         else:
-          emissionProb = emissionModel[trueDistance]
-          newWeight = newWeight * emissionProb
           newParticle.append(ghostPos)
+        emissionProb = emissionModel[trueDistance]
+        newWeight = newWeight * emissionProb
 
       if (newWeight > 0):
         noParticleHasWeight = False
@@ -500,10 +487,27 @@ class JointParticleFilter:
       newWeights.append(newWeight)
 
     if (noParticleHasWeight):
-      self.initializeParticles()
+      self.resample()
     else:
       self.particles = newParticles
       self.weights = newWeights
+
+  def resample(self):
+    print "resample"
+    dist = util.Counter()
+    for particle, weight in zip(self.particles, self.weights):
+      dist[particle] = weight
+    dist.normalize()
+
+    resampleParticles = []
+    resampleWeights = []
+
+    for particle in range(self.numParticles):
+      resampleParticles.append(util.sample(dist))
+      resampleWeights.append(1)
+
+    self.particles = resampleParticles
+    self.weights = resampleWeights
   
   def getBeliefDistribution(self):
     dist = util.Counter()
