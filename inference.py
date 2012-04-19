@@ -258,7 +258,8 @@ class ParticleFilter(InferenceModule):
     newBeliefs = []
 
     if (noisyDistance == None):
-      newBeliefs.append((self.getJailPosition(),1))
+      for i in range(self.numParticles):
+        newBeliefs.append((self.getJailPosition(),1))
     else:
       #loop through particles
       for position, probability in self.beliefs:
@@ -443,8 +444,23 @@ class JointParticleFilter:
     """ 
     pacmanPosition = gameState.getPacmanPosition()
     noisyDistances = gameState.getNoisyGhostDistances()
-    if len(noisyDistances) < self.numGhosts: return
+    if (len(noisyDistances) < self.numGhosts):
+      print "SOMETHING_WENT_WRONG"
+      return
     emissionModels = [busters.getObservationDistribution(dist) for dist in noisyDistances]
+
+    """
+    for ghost in range(self.numGhosts):
+      noisyDistance = noisyDistances[ghost]
+      emissionModel = emissionModels[ghost]
+
+      if (noisyDistance = None):
+        for i in range(self.numParticles):
+          
+      else:
+
+    """
+
 
     "*** YOUR CODE HERE ***"
   
