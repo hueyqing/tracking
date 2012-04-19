@@ -346,7 +346,7 @@ class MarginalInference(InferenceModule):
 class JointParticleFilter:
   "JointParticleFilter tracks a joint distribution over tuples of all ghost positions."
 
-  def __init__(self, numParticles=600):
+  def __init__(self, numParticles=300):
      self.setNumParticles(numParticles)
      self.particles = None
   
@@ -417,6 +417,7 @@ class JointParticleFilter:
           The ghost agent you are meant to supply is self.ghostAgents[ghostIndex-1],
           but in this project all ghost agents are always the same.
     """
+    print "timelapse"
     newParticles = []
     for oldParticle in self.particles:
       newParticle = []
@@ -450,6 +451,8 @@ class JointParticleFilter:
           prior distribution by calling initializeParticles. Remember to
           change ghosts' positions to jail if called for.
     """ 
+    print "observe"
+
     pacmanPosition = gameState.getPacmanPosition()
     noisyDistances = gameState.getNoisyGhostDistances()
     if (len(noisyDistances) < self.numGhosts):
@@ -477,26 +480,37 @@ class JointParticleFilter:
           newParticle.append(jailPosition)
         else:
           newParticle.append(ghostPos)
+
         emissionProb = emissionModel[trueDistance]
         newWeight = newWeight * emissionProb
-
       if (newWeight > 0):
         noParticleHasWeight = False
 
       newParticles.append(tuple(newParticle))
       newWeights.append(newWeight)
 
+
     if (noParticleHasWeight):
-      self.resample()
+      self.resample(noisyDistances)
     else:
       self.particles = newParticles
       self.weights = newWeights
+      
 
-  def resample(self):
+  def resample(self, noisyDistances):
     print "resample"
     dist = util.Counter()
-    for particle, weight in zip(self.particles, self.weights):
-      dist[particle] = weight
+    for i in range(self.numParticles):
+      newParticle = []
+      particle = self.particles[i]
+      weight = self.weights[i]
+      for ghost in range(self.numGhosts):
+        if (noisyDistances[ghost] == None):
+          newParticle.append(self.getJailPosition(ghost))
+        else:
+          newParticle.append(particle[ghost])
+
+      dist[tuple(newParticle)] = weight
     dist.normalize()
 
     resampleParticles = []
