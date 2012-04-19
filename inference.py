@@ -291,10 +291,10 @@ class ParticleFilter(InferenceModule):
     "*** YOUR CODE HERE ***"
     newBeliefs = [];
     
-    for oldPos in self.beliefs:
-      newPosDist = self.getPositionDistribution(self.setGhostPosition(gameState, oldPos[0]))
-      newPos = (util.sample(newPosDist), oldPos[1])
-      newBeliefs.append(newPos)
+    for particle in self.beliefs:
+      newPosDist = self.getPositionDistribution(self.setGhostPosition(gameState, particle[0]))
+      newParticle = (util.sample(newPosDist), particle[1])
+      newBeliefs.append(newParticle)
     
     self.beliefs = newBeliefs
 
@@ -357,7 +357,7 @@ class JointParticleFilter:
     self.beliefs = []
     for x in self.numParticles:
       ghostTuple = []
-      for y in self.numGhosts
+      for y in self.numGhosts:
         ghostTuple.append(random.choice(self.legalPositions))
       self.beliefs.append(tuple(ghostTuple), 1)
 
