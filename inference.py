@@ -224,10 +224,8 @@ class ParticleFilter(InferenceModule):
   def initializeUniformly(self, gameState):
     "Initializes a list of particles. Use self.numParticles for the number of particles"
     self.beliefs = []
-    assignedParticles = self.numParticles
-    while (assignedParticles > 0):
+    for x in self.numParticles:
       self.beliefs.append((random.choice(self.legalPositions), 1))
-      assignedParticles = assignedParticles - 1
   
   def observe(self, observation, gameState):
     """
@@ -292,10 +290,10 @@ class ParticleFilter(InferenceModule):
     "*** YOUR CODE HERE ***"
     newBeliefs = [];
     
-    for oldPos in self.beliefs:
-      newPosDist = self.getPositionDistribution(self.setGhostPosition(gameState, oldPos[0]))
-      newPos = (util.sample(newPosDist), oldPos[1])
-      newBeliefs.append(newPos)
+    for particle in self.beliefs:
+      newPosDist = self.getPositionDistribution(self.setGhostPosition(gameState, particle[0]))
+      newParticle = (util.sample(newPosDist), particle[1])
+      newBeliefs.append(newParticle)
     
     self.beliefs = newBeliefs
 
@@ -356,14 +354,11 @@ class JointParticleFilter:
     "Initializes particles randomly.  Each particle is a tuple of ghost positions. Use self.numParticles for the number of particles"
     "*** YOUR CODE HERE ***"
     self.beliefs = []
-    assignedParticles = self.numParticles
-    while (assignedParticles > 0):
+    for x in self.numParticles:
       ghostTuple = []
-      assignedGhostPos = self.numGhosts
-      while (assignedGhostPos > 0):
+      for y in self.numGhosts:
         ghostTuple.append(random.choice(self.legalPositions))
       self.beliefs.append(tuple(ghostTuple), 1)
-      assignedParticles = assignedParticles - 1
 
   def addGhostAgent(self, agent):
     "Each ghost agent is registered separately and stored (in case they are different)."
