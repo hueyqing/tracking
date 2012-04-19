@@ -7,6 +7,8 @@
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
 
 import util
+import sys
+import random
 from game import Agent
 from game import Directions
 from keyboardAgents import KeyboardAgent
@@ -103,9 +105,46 @@ class GreedyBustersAgent(BustersAgent):
     """
     pacmanPosition = gameState.getPacmanPosition()
     legal = [a for a in gameState.getLegalPacmanActions()]
+    random.shuffle(legal)
     livingGhosts = gameState.getLivingGhosts()
     livingGhostPositionDistributions = [beliefs for i,beliefs
                                         in enumerate(self.ghostBeliefs)
                                         if livingGhosts[i+1]]
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    #Computer most likely position of each ghost
+    ghostPositions = list()
+    for distribution in livingGhostPositionDistributions:
+      maxProb = 0
+      maxPos = None
+      for pos, prob in distribution.items():
+        if (prob > maxProb):
+          maxPos = pos
+          maxProb = prob
+
+      ghostPositions.append(maxPos)
+      
+    #find closest ghost
+    minDist = sys.maxint
+    minPos = None
+    for ghostPosition in ghostPositions:
+      dist = self.distancer.getDistance(pacmanPosition, ghostPosition)
+      if (dist < minDist):
+        minPos = ghostPosition
+        minDist = dist
+
+    #find action that minimizes
+
+    minDist = sys.maxint
+    minAction = None
+    for action in legal:
+      successorPosition = Actions.getSuccessor(pacmanPosition, action)
+      dist = self.distancer.getDistance(successorPosition, minPos)
+      if (dist < minDist):
+        minDist = dist
+        minAction = action
+
+    return minAction
+    
+
+
+    
