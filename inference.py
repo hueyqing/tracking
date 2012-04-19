@@ -227,7 +227,7 @@ class ParticleFilter(InferenceModule):
     "*** YOUR CODE HERE ***"
     self.beliefs = []
     assignedParticles = self.numParticles
-    while assignedParticles > 0:
+    while (assignedParticles > 0):
       self.beliefs.append((random.choice(self.legalPositions), 1))
       assignedParticles = assignedParticles - 1
   
@@ -256,13 +256,29 @@ class ParticleFilter(InferenceModule):
     emissionModel = busters.getObservationDistribution(noisyDistance)
     pacmanPosition = gameState.getPacmanPosition()
     "*** YOUR CODE HERE ***"
+
+    noParticleHasWeight = True
+    for particle in self.beliefs:
+      if (particle[1] > 0.001):
+        noParticleHasWeight = False
+    
+    if (noParticleHasWeight):
+      self.initializeUniformly(gameState)
+
+    newBeliefs = []
+
     if (noisyDistance == None):
+      newBeliefs.append((self.getJailPosition(),1))
+    else:
       for particle in self.beliefs:
-        self.beliefs.remove(particle)
-        self.beliefs.append(self.getJailPosition())
-    elif (
-    
-    
+        position = particle[0]
+        trueDistance = util.manhattanDistance(position, pacmanPosition)
+        emissionProb = emissionModel[trueDistance]
+        if (emissionProb > 0):
+          weight = emissionProb * particle[1]
+          newBeliefs.append((position, weight))
+    self.beliefs = newBeliefs
+          
   def elapseTime(self, gameState):
     """
     Update beliefs for a time step elapsing.
@@ -277,22 +293,12 @@ class ParticleFilter(InferenceModule):
     """
     "*** YOUR CODE HERE ***"
     newBeliefs = [];
-    if (self.transitionMap == None):
-      transitionMap = dict();
-      for initialPosition in self.legalPositions:
-        finalPositionDist = self.getPositionDistribution(self.setGhostPosition(gameState, initialPosition))
-        for finalPosition, prob in finalPositionDist.items():
-          transitionMap[(initialPosition, finalPosition)] = finalPositionDist[initialPosition]
-
-    for newPos in self.legalPositions:
-      for oldPos in self.legalPositions:
-        transProb = transitionMap[(initialPosition, finalPosition)]
-        oldBelief = self.beliefs[oldPos]
-        sum = sum + transProb * oldBelief
-      
-      newBeliefs[newPos] = sum
     
-    newBeliefs.normalize()
+    for oldPos in self.beliefs:
+      newPosDist = self.getPositionDistribution(self.setGhostPosition(gameState, oldPos[0]))
+      newPos = (util.sample(newPosDist), oldPos[1])
+      newBeliefs.append(newPos)
+    
     self.beliefs = newBeliefs
 
   def getBeliefDistribution(self):
@@ -301,7 +307,12 @@ class ParticleFilter(InferenceModule):
     ghost locations conditioned on all evidence and time passage.
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    returnVal = util.Counter()
+    for position in self.legalPositions:
+      returnVal[position] = 0
+    for particle in self.beliefs:
+      returnVal[particle[0]] = particle[1]
+    return returnVal
 
 class MarginalInference(InferenceModule):
   "A wrapper around the JointInference module that returns marginal beliefs about ghosts."
@@ -346,7 +357,15 @@ class JointParticleFilter:
   def initializeParticles(self):
     "Initializes particles randomly.  Each particle is a tuple of ghost positions. Use self.numParticles for the number of particles"
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    self.beliefs = []
+    assignedParticles = self.numParticles
+    while (assignedParticles > 0):
+      ghostTuple = []
+      assignedGhostPos = self.numGhosts
+      while (assignedGhostPos > 0):
+        ghostTuple.append(random.choice(self.legalPositions))
+      self.beliefs.append(tuple(ghostTuple), 1)
+      assignedParticles = assignedParticles - 1
 
   def addGhostAgent(self, agent):
     "Each ghost agent is registered separately and stored (in case they are different)."
