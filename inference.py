@@ -64,6 +64,7 @@ class InferenceModule:
     # The legal positions do not include the ghost prison cells in the bottom left.
     self.legalPositions = [p for p in gameState.getWalls().asList(False) if p[1] > 1]   
     self.initializeUniformly(gameState)
+    self.transitionMap = None
     
   ######################################
   # Methods that need to be overridden #
@@ -97,7 +98,8 @@ class ExactInference(InferenceModule):
   def initializeUniformly(self, gameState):
     "Begin with a uniform distribution over ghost positions."
     self.beliefs = util.Counter()
-    for p in self.legalPositions: self.beliefs[p] = 1.0
+    for position in self.legalPositions:
+      self.beliefs[position] = 1.0
     self.beliefs.normalize()
   
   def observe(self, observation, gameState):
@@ -123,20 +125,27 @@ class ExactInference(InferenceModule):
          
     """
     noisyDistance = observation
+
+    # P(NoisyDist | True Dist)
     emissionModel = busters.getObservationDistribution(noisyDistance)
+
     pacmanPosition = gameState.getPacmanPosition()
-    
-    "*** YOUR CODE HERE ***"
-    # Replace this code with a correct observation update
+
     # Be sure to handle the jail.
-    allPossible = util.Counter()
-    for p in self.legalPositions:
-      trueDistance = util.manhattanDistance(p, pacmanPosition)
-      if emissionModel[trueDistance] > 0: allPossible[p] = 1.0
-    allPossible.normalize()
-        
-    "*** YOUR CODE HERE ***"
-    self.beliefs = allPossible
+    allPossiblePositions = util.Counter()
+
+    if (noisyDistance == None):
+        #Jail Handling
+      allPossiblePositions[self.getJailPosition()] = 1
+    else:
+      for position in self.legalPositions:
+        trueDistance = util.manhattanDistance(position, pacmanPosition)
+        emissionProb = emissionModel[trueDistance]
+        if (emissionProb > 0):
+          allPossiblePositions[position] = emissionProb * self.beliefs[position]
+
+    #allPossiblePositions.normalize()
+    self.beliefs = allPossiblePositions
     
   def elapseTime(self, gameState):
     """
@@ -181,6 +190,25 @@ class ExactInference(InferenceModule):
           in the gameState with a call to self.setGhostPosition above.
     """
     
+    newBeliefs = util.Counter();
+    if (self.transitionMap == None):
+      transitionMap = dict();
+      for initialPosition in self.legalPositions:
+        finalPositionDist = self.getPositionDistribution(self.setGhostPosition(gameState, initialPosition))
+        for finalPosition, prob in finalPositionDist.items():
+          transitionMap[(initialPosition, finalPosition)] = finalPositionDist[initialPosition]
+
+    for newPos in self.legalPositions:
+      sum = 0
+      for oldPos in self.legalPositions:
+        transProb = transitionMap[(initialPosition, finalPosition)]
+        oldBelief = self.beliefs[oldPos]
+        sum = sum + transProb * oldBelief
+      
+      newBeliefs[newPos] = sum
+    
+    newBeliefs.normalize()
+    self.beliefs = newBeliefs
     "*** YOUR CODE HERE ***"
 
   def getBeliefDistribution(self):
