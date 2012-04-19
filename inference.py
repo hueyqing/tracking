@@ -510,14 +510,16 @@ class JointParticleFilter:
         else:
           newParticle.append(particle[ghost])
 
-      dist[tuple(newParticle)] = weight
+      dist[tuple(newParticle)] += weight
     dist.normalize()
 
     resampleParticles = []
     resampleWeights = []
 
     for particle in range(self.numParticles):
-      resampleParticles.append(util.sample(dist))
+      sample = util.sample(dist)
+      print sample
+      resampleParticles.append(sample)
       resampleWeights.append(1)
 
     self.particles = resampleParticles
