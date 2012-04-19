@@ -256,8 +256,8 @@ class ParticleFilter(InferenceModule):
     newBeliefs = []
 
     if (noisyDistance == None):
-      for i in range(self.numParticles):
-        newBeliefs.append((self.getJailPosition(),1))
+      #for i in range(self.numParticles):
+      newBeliefs.append((self.getJailPosition(),1))
     else:
       #loop through particles
       for position, probability in self.beliefs:
@@ -301,12 +301,21 @@ class ParticleFilter(InferenceModule):
     Return the agent's current belief state, a distribution over
     ghost locations conditioned on all evidence and time passage.
     """
-    "*** YOUR CODE HERE ***"
     returnVal = util.Counter()
+
     for position in self.legalPositions:
       returnVal[position] = 0
-    for particle in self.beliefs:
-      returnVal[particle[0]] = particle[1] + returnVal[particle[0]]
+
+    probabilitySum = 0
+    for position, probability in self.beliefs:
+      returnVal[position] += probability
+      probabilitySum = probabilitySum + probability
+
+    for position, probability in self.beliefs:
+      returnVal[position] = returnVal[position] / float(probabilitySum)
+
+    print returnVal
+
     return returnVal
 
 class MarginalInference(InferenceModule):
