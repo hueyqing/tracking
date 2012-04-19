@@ -235,6 +235,11 @@ class ParticleFilter(InferenceModule):
   def initializeUniformly(self, gameState):
     "Initializes a list of particles. Use self.numParticles for the number of particles"
     "*** YOUR CODE HERE ***"
+    self.beliefs = []
+    assignedParticles = self.numParticles
+    while assignedParticles > 0:
+      self.beliefs.append((random.choice(self.legalPositions), 1))
+      assignedParticles = assignedParticles - 1
   
   def observe(self, observation, gameState):
     """
@@ -261,7 +266,12 @@ class ParticleFilter(InferenceModule):
     emissionModel = busters.getObservationDistribution(noisyDistance)
     pacmanPosition = gameState.getPacmanPosition()
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    if (noisyDistance == None):
+      for particle in self.beliefs:
+        self.beliefs.remove(particle)
+        self.beliefs.append(self.getJailPosition())
+    elif (
+    
     
   def elapseTime(self, gameState):
     """
@@ -276,7 +286,24 @@ class ParticleFilter(InferenceModule):
     position.
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    newBeliefs = [];
+    if (self.transitionMap == None):
+      transitionMap = dict();
+      for initialPosition in self.legalPositions:
+        finalPositionDist = self.getPositionDistribution(self.setGhostPosition(gameState, initialPosition))
+        for finalPosition, prob in finalPositionDist.items():
+          transitionMap[(initialPosition, finalPosition)] = finalPositionDist[initialPosition]
+
+    for newPos in self.legalPositions:
+      for oldPos in self.legalPositions:
+        transProb = transitionMap[(initialPosition, finalPosition)]
+        oldBelief = self.beliefs[oldPos]
+        sum = sum + transProb * oldBelief
+      
+      newBeliefs[newPos] = sum
+    
+    newBeliefs.normalize()
+    self.beliefs = newBeliefs
 
   def getBeliefDistribution(self):
     """
