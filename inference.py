@@ -361,15 +361,17 @@ class JointParticleFilter:
     self.initializeParticles()
     
   def initializeParticles(self):
-    "Initializes particles randomly.  Each particle is a tuple of ghost positions. Use self.numParticles for the number of particles"
-    "*** YOUR CODE HERE ***"
-
+    """
+    Initializes particles randomly.
+    Each particle is a tuple of ghost positions.
+    Use self.numParticles for the number of particles"
+    """
     if (self.particles == None):
       initParticles = []
       initWeights = []
-      for x in range(0, self.numParticles):
+      for x in range(self.numParticles):
         ghostTuple = []
-        for y in range(0, self.numGhosts):
+        for y in range(self.numGhosts):
           ghostTuple.append(random.choice(self.legalPositions))
         initParticles.append(tuple(ghostTuple))
         initWeights.append(1)
@@ -442,6 +444,7 @@ class JointParticleFilter:
               
       "*** YOUR CODE HERE ***"
       newParticles.append(tuple(newParticle))
+
     self.particles = newParticles
 
   def getJailPosition(self, i):
@@ -512,8 +515,6 @@ class JointParticleFilter:
       self.particles = newParticles
       self.particlesWeight = newWeights
 
-
-    "*** YOUR CODE HERE ***"
   
   def getBeliefDistribution(self):
     dist = util.Counter()
