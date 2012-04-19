@@ -479,6 +479,34 @@ class JointParticleFilter:
       print "SOMETHING_WENT_WRONG"
       return
     emissionModels = [busters.getObservationDistribution(dist) for dist in noisyDistances]
+
+    noParticleHasWeight = True
+
+    newParticles = []
+    newWeights = []
+
+    for particle, weight in zip(self.particles, self.weights):
+      newParticle = []
+      newWeight = weight
+      if (weight > 0):
+        noParticleHasWeight = False
+      for i in range(0, self.numGhosts):
+        if (noisyDistances[i] == None):
+          newParticle.append(self.getJailPosition(i))
+        else:
+          trueDistance = util.manhattanDistance(particle[i], pacmanPosition)
+          emissionModel = emissionModels[i]
+          emissionProb = emissionModel[trueDistance]
+          newWeight = newWeight * emissionProb
+          newParticle.append(particle[i])
+      newParticles.append(tuple(newParticle))
+      newWeights.append(newWeight)
+    if (noParticleHasWeight):
+      self.initializeParticles()
+    else:
+      self.particles = newParticles
+      self.particlesWeight = newWeights
+
   
   def getBeliefDistribution(self):
     dist = util.Counter()
