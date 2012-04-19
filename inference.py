@@ -358,14 +358,11 @@ class JointParticleFilter:
     "Initializes particles randomly.  Each particle is a tuple of ghost positions. Use self.numParticles for the number of particles"
     "*** YOUR CODE HERE ***"
     self.beliefs = []
-    assignedParticles = self.numParticles
-    while (assignedParticles > 0):
+    for x in self.numParticles:
       ghostTuple = []
-      assignedGhostPos = self.numGhosts
-      while (assignedGhostPos > 0):
+      for y in self.numGhosts
         ghostTuple.append(random.choice(self.legalPositions))
       self.beliefs.append(tuple(ghostTuple), 1)
-      assignedParticles = assignedParticles - 1
 
   def addGhostAgent(self, agent):
     "Each ghost agent is registered separately and stored (in case they are different)."
