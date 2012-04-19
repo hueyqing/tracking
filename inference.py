@@ -348,6 +348,7 @@ class JointParticleFilter:
 
   def __init__(self, numParticles=600):
      self.setNumParticles(numParticles)
+     self.particles = None
   
   def setNumParticles(self, numParticles):
     self.numParticles = numParticles
@@ -362,14 +363,29 @@ class JointParticleFilter:
   def initializeParticles(self):
     "Initializes particles randomly.  Each particle is a tuple of ghost positions. Use self.numParticles for the number of particles"
     "*** YOUR CODE HERE ***"
-    self.particles = []
-    self.particlesWeight = []
-    for x in range(0, self.numParticles):
-      ghostTuple = []
-      for y in range(0, self.numGhosts):
-        ghostTuple.append(random.choice(self.legalPositions))
-      self.particles.append(tuple(ghostTuple))
-      self.particlesWeight.append(1)
+
+    if (self.particles == None):
+      initParticles = []
+      initWeights = []
+      for x in range(0, self.numParticles):
+        ghostTuple = []
+        for y in range(0, self.numGhosts):
+          ghostTuple.append(random.choice(self.legalPositions))
+        initParticles.append(tuple(ghostTuple))
+        initWeights.append(1)
+      self.particles = initParticles
+      self.weights = initWeights
+    else:
+      resampleParticles = []
+      resampleWeights = []
+      for x in range(0, self.numParticles):
+        newGhostTuple = []
+        for y in range(0, self.numGhosts):
+          newGhostTuple.append(util.sample(self.getBeliefDistribution()))
+        resampleParticles.append(tuple(newGhostTuple))
+        resampleWeights.append(1)
+      self.particles = resampleParticles
+      self.weights = rsampleWeights
 
   def addGhostAgent(self, agent):
     "Each ghost agent is registered separately and stored (in case they are different)."
