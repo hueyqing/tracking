@@ -489,6 +489,7 @@ class JointParticleFilter:
     if (noParticleHasWeight):
       self.resample()
     else:
+      print "observe"
       self.particles = newParticles
       self.weights = newWeights
 
