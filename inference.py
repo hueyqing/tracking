@@ -266,9 +266,8 @@ class ParticleFilter(InferenceModule):
           
         trueDistance = util.manhattanDistance(position, pacmanPosition)
         emissionProb = emissionModel[trueDistance]
-        if (emissionProb > 0):
-          weight = emissionProb * probability
-          newBeliefs.append((position, weight))
+        weight = emissionProb * probability
+        newBeliefs.append((position, weight))
 
     if (noParticleHasWeight):
       self.initializeUniformly(gameState)
