@@ -395,11 +395,6 @@ class JointParticleFilter:
     """
     Samples each particle's next state based on its current state and the gameState.
 
-    To loop over the ghosts, use:
-
-      for i in range(self.numGhosts):
-        ...
-
     Then, assuming that "i" refers to the index of the
     ghost, to obtain the distributions over new positions for that
     single ghost, given the list (prevGhostPositions) of previous
@@ -476,25 +471,35 @@ class JointParticleFilter:
     if (len(noisyDistances) < self.numGhosts):
       print "SOMETHING_WENT_WRONG"
       return
-    emissionModels = [busters.getObservationDistribution(dist) for dist in noisyDistances]
 
-    noParticleHasWeight = True
+    emissionModels = [busters.getObservationDistribution(dist) for dist in noisyDistances]
 
     newParticles = []
     newWeights = []
+    noParticleHasWeight = True
 
     for particle, weight in zip(self.particles, self.weights):
       newParticle = []
       newWeight = weight
-      for i in range(0, self.numGhosts):
-        if (noisyDistances[i] == None):
-          newParticle.append(self.getJailPosition(i))
+
+      for ghost in range(self.numGhosts):
+        noisyDistance = noisyDistances[ghost]
+        emissionModel = emissionModels[ghost]
+        ghostPos = particle[ghost]
+        trueDistance = util.manhattanDistance(ghostPos, pacmanPosition)
+        jailPosition = self.getJailPosition(ghost)
+        
+        
+        if (noisyDistances[ghost] == None):
+          newParticle.append(jailPosition)
         else:
-          trueDistance = util.manhattanDistance(particle[i], pacmanPosition)
-          emissionModel = emissionModels[i]
           emissionProb = emissionModel[trueDistance]
           newWeight = newWeight * emissionProb
-          newParticle.append(particle[i])
+          newParticle.append(ghostPos)
+
+      if (newWeight > 0):
+        noParticleHasWeight = False
+
       newParticles.append(tuple(newParticle))
       newWeights.append(newWeight)
       if (newWeight > 0):
@@ -503,7 +508,7 @@ class JointParticleFilter:
       self.initializeParticles()
     else:
       self.particles = newParticles
-      self.particlesWeight = newWeights
+      self.weights = newWeights
 
   
   def getBeliefDistribution(self):
