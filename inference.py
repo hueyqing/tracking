@@ -380,14 +380,11 @@ class JointParticleFilter:
       self.particles = initParticles
       self.weights = initWeights
     else:
-      print "resample"
+      print "resampling"
       resampleParticles = []
       resampleWeights = []
-      for x in range(self.numParticles):
-        ghostPositions = []
-        for ghost in range(self.numGhosts):
-          ghostPositions.append(util.sample(self.getBeliefDistribution()))
-        resampleParticles.append(tuple(ghostPositions))
+      for x in range(0, self.numParticles):
+        resampleParticles.append(util.sample(self.getBeliefDistribution()))
         resampleWeights.append(1)
 
       self.particles = resampleParticles
