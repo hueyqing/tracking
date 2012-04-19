@@ -361,15 +361,17 @@ class JointParticleFilter:
     self.initializeParticles()
     
   def initializeParticles(self):
-    "Initializes particles randomly.  Each particle is a tuple of ghost positions. Use self.numParticles for the number of particles"
-    "*** YOUR CODE HERE ***"
-
+    """
+    Initializes particles randomly.
+    Each particle is a tuple of ghost positions.
+    Use self.numParticles for the number of particles"
+    """
     if (self.particles == None):
       initParticles = []
       initWeights = []
-      for x in range(0, self.numParticles):
+      for x in range(self.numParticles):
         ghostTuple = []
-        for y in range(0, self.numGhosts):
+        for y in range(self.numGhosts):
           ghostTuple.append(random.choice(self.legalPositions))
         initParticles.append(tuple(ghostTuple))
         initWeights.append(1)
@@ -442,6 +444,7 @@ class JointParticleFilter:
               
       "*** YOUR CODE HERE ***"
       newParticles.append(tuple(newParticle))
+
     self.particles = newParticles
 
   def getJailPosition(self, i):
@@ -476,36 +479,6 @@ class JointParticleFilter:
       print "SOMETHING_WENT_WRONG"
       return
     emissionModels = [busters.getObservationDistribution(dist) for dist in noisyDistances]
-
-##    noParticleHasWeight = True
-##
-##    newParticles = []
-##    newWeights = []
-##
-##    for particle, weight in zip(self.particles, self.particlesWeight):
-##      newParticle = []
-##      newWeight = weight
-##      if (weight > 0.001):
-##        noParticleHasWeight = False
-##      for i in range(0, self.numGhosts):
-##        if (noisyDistances[i] == None):
-##          newParticle.append(self.getJailPosition)
-##        else:
-##          trueDistance = util.manhattanDistance(particle[i], pacmanPosition)
-##          emissionModel = emissionModels[i]
-##          emissionProb = emissionModel[trueDistance]
-##          newWeight = newWeight * emissionProb
-##          newParticle.append(particle[i])
-##      newParticles.append(tuple(newParticle))
-##      newWeights.append(newWeight)
-##    if (noParticleHasWeight):
-##      self.initializeParticles()
-##    else:
-##      self.particles = newParticles
-##      self.particlesWeight = newWeights
-
-
-    "*** YOUR CODE HERE ***"
   
   def getBeliefDistribution(self):
     dist = util.Counter()
