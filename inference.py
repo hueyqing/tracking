@@ -224,7 +224,7 @@ class ParticleFilter(InferenceModule):
   def initializeUniformly(self, gameState):
     "Initializes a list of particles. Use self.numParticles for the number of particles"
     self.beliefs = []
-    for x in self.numParticles:
+    for x in range(0, self.numParticles):
       self.beliefs.append((random.choice(self.legalPositions), 1))
   
   def observe(self, observation, gameState):
@@ -307,7 +307,7 @@ class ParticleFilter(InferenceModule):
     for position in self.legalPositions:
       returnVal[position] = 0
     for particle in self.beliefs:
-      returnVal[particle[0]] = particle[1]
+      returnVal[particle[0]] = particle[1] + returnVal[particle[0]]
     return returnVal
 
 class MarginalInference(InferenceModule):
